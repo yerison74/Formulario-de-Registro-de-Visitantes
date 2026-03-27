@@ -515,7 +515,7 @@ export default function FormularioContratista() {
       <header className="cf-header">
         <div className="cf-header-inner">
           {/* Replace src with your actual logo path */}
-          {<img src="public/Logo-Die-scaled.jpeg" alt="SEPRI" className="cf-header-logo" />}
+          {<img src="Logo-Die-scaled.jpeg" alt="SEPRI" className="cf-header-logo" />}
           <h1>Formulario de Registro de Visitantes</h1>
           <p className="cf-header-desc">
             Complete el formulario para registrar su visita. Todos los campos marcados con * son obligatorios.
