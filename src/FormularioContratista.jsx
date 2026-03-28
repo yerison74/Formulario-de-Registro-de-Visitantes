@@ -9,6 +9,33 @@ const supabase = createClient(
 
 const APP_ORIGIN = import.meta.env.VITE_APP_ORIGIN ?? "https://sepri.vercel.app";
 
+// ── Token QR: generado en Supabase (tabla contratista_access_tokens) ──────────
+async function obtenerOCrearToken(solicitudId) {
+  // 1. Buscar token activo existente
+  const { data: existing } = await supabase
+    .from("contratista_access_tokens")
+    .select("token")
+    .eq("solicitud_id", solicitudId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (existing?.token) return existing.token;
+
+  // 2. Crear uno nuevo (32 hex chars)
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const token = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+  const { data: inserted, error } = await supabase
+    .from("contratista_access_tokens")
+    .insert({ solicitud_id: solicitudId, token })
+    .select("token")
+    .single();
+
+  if (error) throw new Error(error.message || "Error al crear token QR");
+  return inserted.token;
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MOTIVOS = [
   "Adenda",
@@ -469,7 +496,8 @@ export default function FormularioContratista() {
 
       if (error) throw error;
 
-      const detailUrl = `${APP_ORIGIN}/contratista/${encodeURIComponent(data.id)}`;
+      const token = await obtenerOCrearToken(data.id);
+      const detailUrl = `${APP_ORIGIN}/contratista/${token}`;
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(detailUrl)}`;
 
       setSuccess({
